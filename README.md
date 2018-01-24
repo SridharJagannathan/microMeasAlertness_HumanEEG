@@ -32,7 +32,7 @@ Then proceed directly to 1) below, if not then look at "Electrode Labelling"
    
 "Electrode Labelling":           
 If you have a 64 channel system then look at the electrode locations from 64 electrodes from Neuroscan and choose the optimal locations and 
-rename your electrode labels to those given in line 14.           
+rename your electrode labels to those given for Neuroscan.           
 If you have a 128 channel system then look at the electrode locations from 128 electrodes from EGI and choose the optimal locations and 
-rename your electrode labels to those given in line 16,17.     
+rename your electrode labels to those given for EGI.     
 Once you are done with electrode labelling, go to 1)
