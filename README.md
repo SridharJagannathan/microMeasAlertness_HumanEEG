@@ -16,8 +16,8 @@ Frontal:'F7', 'F8', 'Fz'
 or                                      
 If you have a system with 128 electrodes from EGI with the following electrode labels:       
 Occiptal: 'E75','E70','E83', Central: 'E36', 'E104', Parietal:'E90', Temporal:'E45','E108','E102','E115','E100',        
-Frontal:'E33', 'E122', 'E11'.
-or                                      
+Frontal:'E33', 'E122', 'E11'                                                                                                           
+or              
 If you have a system with 256 electrodes from EGI with the following electrode labels:       
 Occiptal: 'E126','E116','E150', Central: 'E59', 'E183', Parietal:'E161', Temporal:'E69','E202','E179','E219','E190',        
 Frontal:'E47', 'E2', 'E21'. 
