@@ -1,10 +1,15 @@
 The project is mainly about micro measures of Alertness levels in Humans using EEG
 
 ## Requirements:
+### Software:
 * Matlab (tested with R2016b)
-* EEGlab (tested with eeglab13_5_4b),
-* fieldtrip (tested with fieldtrip-20151223), 
-
+* EEGlab (tested with eeglab13_5_4b)
+* fieldtrip (tested with fieldtrip-20151223)
+### Data:
+* pretrial epoched data 
+* minimum of 4sec duration 
+* sampled at 250 Hz
+* Cz referenced
 
 ## Steps:
 
@@ -24,11 +29,11 @@ Occiptal: 'E126','E116','E150', Central: 'E59', 'E183', Parietal:'E161', Tempora
 Frontal:'E47', 'E2', 'E21'
 ```
 
-Then proceed directly to 1. below, if not then look at "Electrode Labelling"
+Then proceed directly to 1. below, if not then look at the section **Electrode Labelling**
 
 1. Look at the example_demo and add the relevant paths including this toolbox
-2. Load your file in the EEGlab format (pretrial epoched data of 4sec duration sampled at 250 Hz)
-3. Pass this to the classify_microMeasures function
+2. Load your file in the EEGlab format
+3. Pass this to the [classify_microMeasures](https://github.com/SridharJagannathan/microMeasAlertness_HumanEEG/blob/master/classify_microMeasures.m) function as shown in [example_demo](https://github.com/SridharJagannathan/microMeasAlertness_HumanEEG/blob/master/example_demo.m)
 4. The return values inside the struct trialstruc contains indices of your trials classed as 'Alert', 'Drowsy(mid)', 'Drowsy(grapho)'. 
 Also has additional details on elements like vertex, spindle, k-complex indices
    
