@@ -1,8 +1,9 @@
 
-function [trialstruc] = classify_microMeasures(eegStruct, modelfilepath)
+function [trialstruc] = classify_microMeasures(eegStruct, modelfilepath,channelconfig)
 % 
 % Inputs: EEGlabStruct   - EEGlab data structure,
 %         modelfilepath   - Path of the trained model,
+%         channelconfig  - 64 or 128 or 256 channel dataset..
 % Outputs: trialstruc   - Trial indexs of alert, drowsymild,
 %         drowsysevere, and also vertex, spindle, k-complex indices..
 %
@@ -12,7 +13,7 @@ function [trialstruc] = classify_microMeasures(eegStruct, modelfilepath)
 % Requirements: EEGlab (tested with eeglab13_5_4b), fieldtrip (tested with
 % fieldtrip-20151223), Matlab (tested with R2016b)
 %_____________________________________________________________________________
-% Author: Sridhar Jagannathan (23/10/2017).
+% Author: Sridhar Jagannathan (03/03/2018).
 %
 % Copyright (C) 2017 Sridhar Jagannathan
 %
@@ -33,17 +34,84 @@ function [trialstruc] = classify_microMeasures(eegStruct, modelfilepath)
 trialstruc = [];
 EEG = eegStruct;
 
-%% Step1: Use only some channels ..
-           
-if eegStruct.nbchan>=70
-    electrodes_rx = {'E75','E70','E83',...
+%% Step1: Select the best config..
+chan_elecs =[];
+if strcmp('64',channelconfig)
+    chan_elecs = {'Oz','O1','O2',...
+                     'C3', 'C4', ...
+                     'PO10',...
+                     'T7','T8','TP8','FT10','TP10',...
+                     'F7', 'F8', 'Fz'};
+    
+elseif strcmp('128',channelconfig)
+    chan_elecs = {'E75','E70','E83',...
                      'E36', 'E104', ... 
                      'E90',...
-                     'E45','E108','E102','E114','E100',...
-                     'E33', 'E122', 'E11'};    
-else
+                     'E45','E108','E102','E115','E100',...
+                     'E33', 'E122', 'E11'};
     
-    electrodes_rx = {'Oz','O1','O2',...
+elseif strcmp('256',channelconfig)
+    chan_elecs = {'E126','E116','E150',...
+                     'E59', 'E183', ... 
+                     'E161',...
+                     'E69','E202','E179','E219','E190',...
+                     'E47', 'E2', 'E21'};
+    
+else
+    error('Invalid channel configuration') 
+end
+
+
+chan_elec_act=[];                 
+for idx = 1:length(EEG.chanlocs)
+chan_elec_act{idx} = [EEG.chanlocs(idx).labels];
+end
+match_chan=[];
+for idx = 1:length(EEG.chanlocs)
+match_chan(idx) = sum(strcmp(chan_elecs,chan_elec_act{idx}));
+end
+
+config_chan =[];
+%% Step1: Use only some channels ..
+           
+if sum(match_chan) == length(chan_elecs)
+    
+    if strcmp('64',channelconfig)
+        config_chan = '64_chan'; 
+        fprintf('\n--Using 64 channel configuration--\n');
+    elseif strcmp('128',channelconfig)
+        config_chan = '128_chan';
+        fprintf('\n--Using 128 channel configuration--\n');
+    elseif strcmp('256',channelconfig)
+        config_chan = '256_chan'; 
+        fprintf('\n--Using 256 channel configuration--\n');
+    end
+else
+    warning('Trying to run a sub-optimal configuration')
+    error('The 256 or 128 or 64 channel configs dont match') 
+     
+end
+
+
+if  strcmp('256_chan',config_chan)
+    
+     electrodes_rx = {'E126','E116','E150',...
+                     'E59', 'E183', ... 
+                     'E161',...
+                     'E69','E202','E179','E219','E190',...
+                     'E47', 'E2', 'E21'};
+
+elseif  strcmp('128_chan',config_chan)
+    
+     electrodes_rx = {'E75','E70','E83',...
+                     'E36', 'E104', ... 
+                     'E90',...
+                     'E45','E108','E102','E115','E100',...
+                     'E33', 'E122', 'E11'};
+    
+elseif strcmp('64_chan',config_chan)
+    
+     electrodes_rx = {'Oz','O1','O2',...
                      'C3', 'C4', ...
                      'PO10',...
                      'T7','T8','TP8','FT10','TP10',...
@@ -64,15 +132,23 @@ EEG = EEG_rx;
 %Collect channel labels..
 chanlabels={EEG.chanlocs.labels};
 
-if eegStruct.nbchan>=70
+if strcmp('256_chan',config_chan)
+    
+    electrodes_occ = {'E126','E116','E150'};
+    electrodes_tempero = {'E202','E179','E219','E190'};
+    electrodes_frontal = {'E47', 'E2', 'E21'};
+    electrodes_central = {'E59', 'E183'};
+    electrodes_parietal = {'E161'};
+    
+elseif strcmp('128_chan',config_chan)
     
     electrodes_occ = {'E75','E70','E83'};
-    electrodes_tempero = {'E108','E102','E114','E100'};
+    electrodes_tempero = {'E108','E102','E115','E100'};
     electrodes_frontal = {'E33', 'E122', 'E11'};
     electrodes_central = {'E36', 'E104'};
     electrodes_parietal = {'E90'};
     
-else
+elseif strcmp('64_chan',config_chan)
     
     electrodes_occ = {'Oz','O1','O2'};
     electrodes_tempero = {'T8','TP8','FT10','TP10'};
@@ -115,19 +191,27 @@ fprintf('\n--Computing Variance features--\n');
 
 [trials_alert, misc_alert]= classify_computeVariancefts(EEG_occ);
 
-if eegStruct.nbchan>=70
+if strcmp('256_chan',config_chan)
+    
+    eleclabels.frontal = {'E47', 'E2', 'E21'};
+    eleclabels.central = {'E59', 'E183'};
+    %eleclabels.parietal = {'E101'};
+    eleclabels.temporal =  {'E69','E202'};
+    eleclabels.occipetal = {'E126','E116','E150'};
+
+elseif strcmp('128_chan',config_chan)
     
     eleclabels.frontal = {'E33', 'E122', 'E11'};
     eleclabels.central = {'E36', 'E104'};
-    eleclabels.parietal = {'E62'};
+    %eleclabels.parietal = {'E62'};
     eleclabels.temporal =  {'E45','E108'};
     eleclabels.occipetal = {'E75','E70','E83'};
     
-else
+elseif strcmp('64_chan',config_chan)
     
     eleclabels.frontal = {'F7', 'F8', 'Fz'};
     eleclabels.central = {'C3', 'C4'};
-    eleclabels.parietal = {'Pz'};
+    %eleclabels.parietal = {'Pz'};
     eleclabels.temporal =  {'T7', 'T8'};
     eleclabels.occipetal = {'Oz','O1', 'O2'};
     

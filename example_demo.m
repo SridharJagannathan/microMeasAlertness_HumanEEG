@@ -24,11 +24,11 @@ rmpath(genpath([eeglab_toolbox '/functions/octavefunc']));
 
 %% %1. Preprocessed file -- > This contains the EEGlab preprocessed file
 
-%S.eeg_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/valdas_maskingdataset/preprocess'];
-%S.eeg_filename = ['AuMa_5_pretrial_preprocess'];
+S.eeg_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/valdas_maskingdataset/preprocess'];
+S.eeg_filename = ['AuMa_5_pretrial_preprocess'];
 
-S.eeg_filepath = [pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/pretrial_preprocess'];
-S.eeg_filename = ['105_pretrial_preprocess'];
+%S.eeg_filepath = [pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/pretrial_preprocess'];
+%S.eeg_filename = ['105_pretrial_preprocess'];
 
 % load the preprocessed EEGdata set..
 evalexp = 'pop_loadset(''filename'', [S.eeg_filename ''.set''], ''filepath'', S.eeg_filepath);';
@@ -39,4 +39,5 @@ evalexp = 'pop_loadset(''filename'', [S.eeg_filename ''.set''], ''filepath'', S.
 % Outputs: trialstruc   - Trial indexs of alert, drowsy(mild),
 %                         drowsy(severe), and also vertex, spindle, 
 %                         k-complex indices..
-[trialstruc] = classify_microMeasures(EEG, modelfilepath);
+channelconfig = '128'; %'64' or '128' or '256' channel eeg configuration..
+[trialstruc] = classify_microMeasures(EEG, modelfilepath,channelconfig);

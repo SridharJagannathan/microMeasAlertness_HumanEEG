@@ -54,8 +54,8 @@ evalexp = 'pop_loadset(''filename'', [S.eeg_filename ''.set''], ''filepath'', S.
 electrodes_rx = {'E75','E70','E83',...
                  'E36', 'E104', ... 
                  'E90',...
-                 'E45','E108','E102','E114','E100',...
-                 'E33', 'E122', 'E11'};        
+                 'E45','E108','E102','E115','E100',...
+                 'E33', 'E122', 'E11'};      
             
 chanlabels={EEG.chanlocs.labels};
 selec_elec = ismember(chanlabels,electrodes_rx);
@@ -70,7 +70,7 @@ EEG = EEG_rx;
 %Collect channel labels..
 chanlabels={EEG.chanlocs.labels};
 electrodes_occ = {'E75','E70','E83'};
-electrodes_tempero = {'E108','E102','E114','E100'};
+electrodes_tempero = {'E108','E102','E115','E100'};
 electrodes_frontal = {'E33', 'E122', 'E11'};
 electrodes_central = {'E36', 'E104'};
 electrodes_parietal = {'E90'};
@@ -109,7 +109,7 @@ fprintf('\n--Computing Variance features--\n');
 
 eleclabels.frontal = {'E33', 'E122', 'E11'};
 eleclabels.central = {'E36', 'E104'};
-eleclabels.parietal = {'E62'};
+%eleclabels.parietal = {'E62'};
 eleclabels.temporal =  {'E45','E108'};
 eleclabels.occipetal = {'E75','E70','E83'};
 
@@ -248,7 +248,7 @@ testData = [misc_alert.varian.freqband2' misc_alert.varian.freqband5' misc_alert
                     misc_alert.varian.freqband10'...
                     coh_features];
                 
-S.model_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/microMeasAlertness_HumanEEG/'];
+S.model_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/microMeasAlertness_HumanEEG/models/'];
                  
 S.model_filename = ['model_collec64_'];
 clear model_collecAlert minimums_collAlert ranges_collAlert

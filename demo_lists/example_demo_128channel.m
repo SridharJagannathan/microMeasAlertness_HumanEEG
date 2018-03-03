@@ -44,7 +44,7 @@ evalexp = 'pop_loadset(''filename'', [S.eeg_filename ''.set''], ''filepath'', S.
 [T,EEG] = evalc(evalexp);
 
 %% Use it to micro measure alertness levels..
-[trialstruc] = classify_microMeasures(EEG, modelfilepath);
+[trialstruc] = classify_microMeasures(EEG, modelfilepath,'128');
 
 %% Now validate that with Hori..
 %2. Horiscale data  --> Common for all subjects
