@@ -385,5 +385,6 @@ trialstruc.drowsysevere = find(predict_label == 3);
 trialstruc.vertgrapho = intersect(trialstruc.drowsysevere,vertex_def);
 trialstruc.spingrapho = intersect(trialstruc.drowsysevere,spindle_def);
 trialstruc.kcompgrapho = intersect(trialstruc.drowsysevere,kcomp_def);
+trialstruc.testData = testData;
 
 end
