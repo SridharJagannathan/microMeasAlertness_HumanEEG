@@ -10,7 +10,7 @@ loadpath;
 %% Load the input files..
 subject_ids = {'merged'};
 
-montage = 'elec64'; %'elec64','sleep'
+montage = 'elecsleep'; %'elec64','elecsleep'
 
 rmsubject_ids = {montage,...
                  '105','107','109','111','113','117', ...
@@ -92,7 +92,7 @@ if strcmp(montage,'elec64')
                       'T7','T8','TP8','FT10','TP10',...
                       'F7', 'F8', 'Fz'};
     
-elseif strcmp(montage,'sleep')
+elseif strcmp(montage,'elecsleep')
     electrodes_rx = {'O1','O2',... %'Oz',
                      'C3', 'C4', ...
                      'P4', ... %'PO10',
@@ -121,7 +121,7 @@ if strcmp(montage,'elec64')
     electrodes_central = {'C3', 'C4'};
     electrodes_parietal = {'PO10'};
     
-elseif strcmp(montage,'sleep')
+elseif strcmp(montage,'elecsleep')
     electrodes_occ = {'O1','O2'}; %'Oz'
     electrodes_tempero = {'P3','Pz'}; %'T8','TP8','FT10','TP10'
     electrodes_frontal = {'F3', 'F4', 'Fz'}; %'F7', 'F8'
@@ -170,7 +170,7 @@ if strcmp(montage,'elec64')
    eleclabels.temporal =  {'T7', 'T8'};
    eleclabels.occipetal = {'Oz','O1', 'O2'};
     
-elseif strcmp(montage,'sleep')
+elseif strcmp(montage,'elecsleep')
     eleclabels.frontal = {'F3', 'F4', 'Fz'};
     eleclabels.central = {'C3', 'C4'};
     %eleclabels.parietal = {'Pz'};
