@@ -2,24 +2,26 @@ clear
 %clc
 %close all
 
-pathappend = '/work/imagingQ/';
-
 %% Add paths now..
-
+% Set these to your local installations..
 %Fieldtrip path
-ftp_toolbox = [pathappend 'SpatialAttention_Drowsiness/Scripts/toolboxes/fieldtrip-20151223'];
+ftp_toolbox = '/path/to/fieldtrip-20151223';
 %EEGlab path
-eeglab_toolbox = [pathappend 'SpatialAttention_Drowsiness/Scripts/toolboxes/eeglab13_5_4b'];
-%uicromeasures path
-uicromeasures_toolbox = [pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/microMeasAlertness_HumanEEG'];
+eeglab_toolbox = '/path/to/eeglab13_5_4b';
+%Data root containing the auditory masking dataset preprocess/ folder (not bundled)
+pathappend = '/path/to/valdas_maskingdataset/';
+
+%uicromeasures path (parent folder of demo_lists)
+uicromeasures_toolbox = fileparts(fileparts(mfilename('fullpath')));
 %Model file -- > This contains the Model file for classification
 S.model_filepath = [ uicromeasures_toolbox '/models/'];
-S.model_filename = ['model_collec64_'];%old_model_collec64_
+S.model_filename = ['model_collec_elec64'];
 modelfilepath = [ S.model_filepath S.model_filename];
 
 addpath(ftp_toolbox);
 addpath(genpath(eeglab_toolbox));
 addpath(genpath(uicromeasures_toolbox));
+rmpath(genpath([eeglab_toolbox '/functions/octavefunc']));
 
 %% %1. Preprocessed file -- > This contains the EEGlab preprocessed file
 
@@ -35,7 +37,7 @@ for m = 1 : length(subject_ids)
 testsubj = subject_ids{m};
 testsubj = str2num(testsubj);
 
-S.eeg_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/valdas_maskingdataset/preprocess'];
+S.eeg_filepath = [ pathappend 'preprocess'];
 S.eeg_filename = ['AuMa_' num2str(testsubj) '_pretrial_preprocess'];
 
 % load the preprocessed EEGdata set..
@@ -48,7 +50,7 @@ evalexp = 'pop_loadset(''filename'', [S.eeg_filename ''.set''], ''filepath'', S.
 
 %% Now validate that with Hori..
 %2. Horiscale data  --> Common for all subjects
-S.hori_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/valdas_maskingdataset/preprocess/'];
+S.hori_filepath = [ pathappend 'preprocess/'];
 S.hori_filename = 'merged_AudMaskingCz_hori.mat';
 
 hori_data = load([S.hori_filepath S.hori_filename]);
@@ -82,7 +84,7 @@ fprintf('\n--Validating :%s--\n',string(testsubj));
 fprintf('-- Accuracy rate %0.2f%% --- \n', 100*accuracyAll);
 
 if length(confusionMatrixAll) == 1
-    if unique(testLabel) == 1
+    if orderAll(1) == 1
         names= {'Alert'}; 
     else
         names= {'Drowsy'}; 
