@@ -1,5 +1,5 @@
 %% Start afresh by clearing all command windows and variables
-%clc; 
+%clc;
 clear;
 
 rng(1); % For reproducibility
@@ -10,17 +10,20 @@ loadpath;
 %% Load the input files..
 subject_ids = {'merged'};
 
-rmsubject_ids = {'','105','107','109','111','113','117', ...
-               '118','122','123','125','127','129', ...%, missing data..,'132','151'
-               '134','137','138','139','144','147', ...      
-               '149','150'};
-           
-for k = 1: 1 %length(rmsubject_ids)         
-           
+montage = 'elecsleep'; %'elec64','elecsleep'
+
+rmsubject_ids = {montage,...
+                 '105','107','109','111','113','117', ...
+                 '118','122','123','125','127','129', ...%, missing data..,'132','151'
+                 '134','137','138','139','144','147', ...
+                 '149','150'};
+             
+for k = 1: 1 %length(rmsubject_ids)
+
 for m = 1:length(subject_ids)
-    
+
 subject = subject_ids{m};
-   
+
 %1. Preprocessed file -- > This contains the EEGlab preprocessed file
 S.eeg_filepath = [pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/pretrial_preprocess'];
 S.eeg_filename = [subject '_pretrial_preprocess'];
@@ -70,7 +73,7 @@ graphoindexes(find(strcmp(Gold_usable,'Grapho'))) = 3;
 
 
 S.feat_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/Scripts/classify_libsvm/'];
-S.feat_filename = ['feat_groups.mat'];
+S.feat_filename = ['feat_groups_' char(rmsubject_ids(k)) '.mat'];
 
 if ~exist([S.feat_filepath S.feat_filename], 'file')   %Check if features have been computed
 
@@ -81,12 +84,24 @@ evalexp = 'pop_select(EEG, ''notrial'', rm_trls)';
 [T,EEG] = evalc(evalexp);
 
 %% Use only some channels ..
-electrodes_rx = {'Oz','O1','O2',...
-                 'C3', 'C4', ...
-                 'PO10',...
-                 'T7','T8','TP8','FT10','TP10',...
-                 'F7', 'F8', 'Fz'};
+
+if strcmp(montage,'elec64')
+    electrodes_rx =  {'Oz','O1','O2',...
+                      'C3', 'C4', ...
+                      'PO10',...
+                      'T7','T8','TP8','FT10','TP10',...
+                      'F7', 'F8', 'Fz'};
     
+elseif strcmp(montage,'elecsleep')
+    electrodes_rx = {'O1','O2',... %'Oz',
+                     'C3', 'C4', ...
+                     'P4', ... %'PO10',
+                     'P3','Pz',... %'T7','T8','TP8','FT10','TP10',
+                     'F3', 'F4', 'Fz' %'F7', 'F8',
+                     };
+    
+end
+
 chanlabels={EEG.chanlocs.labels};
 selec_elec = ismember(chanlabels,electrodes_rx);
 remove_elec = find(~selec_elec);%Use only selected electrodes..
@@ -98,11 +113,23 @@ EEG = EEG_rx;
 
 %Collect channel labels..
 chanlabels={EEG.chanlocs.labels};
-electrodes_occ = {'Oz','O1','O2'};
-electrodes_tempero = {'T8','TP8','FT10','TP10'};
-electrodes_frontal = {'F7', 'F8', 'Fz'};
-electrodes_central = {'C3', 'C4'};
-electrodes_parietal = {'PO10'};
+
+if strcmp(montage,'elec64')
+    electrodes_occ = {'Oz','O1','O2'};
+    electrodes_tempero = {'T8','TP8','FT10','TP10'};
+    electrodes_frontal = {'F7', 'F8', 'Fz'};
+    electrodes_central = {'C3', 'C4'};
+    electrodes_parietal = {'PO10'};
+    
+elseif strcmp(montage,'elecsleep')
+    electrodes_occ = {'O1','O2'}; %'Oz'
+    electrodes_tempero = {'P3','Pz'}; %'T8','TP8','FT10','TP10'
+    electrodes_frontal = {'F3', 'F4', 'Fz'}; %'F7', 'F8'
+    electrodes_central = {'C3', 'C4'};
+    electrodes_parietal = {'P4'}; %'PO10'
+    
+end
+
 
 selec_elec = ismember(chanlabels,electrodes_occ);
 remove_elec = find(~selec_elec);%Use only selected electrodes..
@@ -133,15 +160,26 @@ evalexp = 'pop_select(EEG,''nochannel'',remove_elec);';
 
 fprintf('\n--Computing Variance features--\n');
 
-[trials_alert, misc_alert]= classify_detectAlertTrials(EEG_occ);
+[trials_alert, misc_alert]= classify_computeVariancefts(EEG_occ);
+
+
+if strcmp(montage,'elec64')
+   eleclabels.frontal = {'F7', 'F8', 'Fz'};
+   eleclabels.central = {'C3', 'C4'};
+   %eleclabels.parietal = {'Pz'};
+   eleclabels.temporal =  {'T7', 'T8'};
+   eleclabels.occipetal = {'Oz','O1', 'O2'};
+    
+elseif strcmp(montage,'elecsleep')
+    eleclabels.frontal = {'F3', 'F4', 'Fz'};
+    eleclabels.central = {'C3', 'C4'};
+    %eleclabels.parietal = {'Pz'};
+    eleclabels.temporal =  {'P3','Pz'};
+    eleclabels.occipetal = {'O1','O2'};
+    
+end
 
 fprintf('\n--Computing Coherence features--\n');
-eleclabels.frontal = {'F7', 'F8', 'Fz'};
-eleclabels.central = {'C3', 'C4'};
-eleclabels.parietal = {'Pz'};
-eleclabels.temporal =  {'T7', 'T8'};
-eleclabels.occipetal = {'Oz','O1', 'O2'};
-
 [coh]= classify_detectCoherenceTrials(EEG,eleclabels);
 coh_features = table2array(coh);
     %coh_features = coh;
@@ -157,8 +195,7 @@ fprintf('\n--Computing Vertex: monophasic features--\n');
 monophasic_fts =[]; Data = double((EEG_parieto.data));
 for z = 1:EEG_parieto.trials
     for s = 1:size(Data,1)
-        
-        [Vertex, Vertex_ft] = classify_computeVertexMonophasicfts(Data(s,:,z), EEG_parieto.srate);
+         [Vertex, Vertex_ft] = classify_computeVertexMonophasicfts(Data(s,:,z), EEG_parieto.srate);
         if (Vertex_ft.count>0 && Vertex_ft.negpks_1 < -15 && Vertex_ft.negpks_2 < -15 &&...
                                 Vertex_ft.duration >0.1 && Vertex_ft.pospks> 30)
             monophasic_fts(s,z) = 1;
@@ -247,15 +284,17 @@ kcomp_ft =[]; Data = double(squeeze(EEG.data));
 
 for z = 1:EEG.trials
     
-    [Kcomp, Kcomp_ft] = classify_computeKcomplexfts(Data(s,:,z), EEG.srate);
-    
-        if (Kcomp_ft.count>0 && Kcomp_ft.negpks < -45 && Kcomp_ft.pospks-Kcomp_ft.negpks > 100 &&...
-                Kcomp_ft.pospks > 0.5*abs(Kcomp_ft.negpks)) %~isempty(Kcomp.start_stop)
-            kcomp_ft(s,z) = 1;
-        else
-            kcomp_ft(s,z) = 0;
+    for s = 1:size(Data,1)
+        [Kcomp, Kcomp_ft] = classify_computeKcomplexfts(Data(s,:,z), EEG.srate);
 
-        end
+            if (Kcomp_ft.count>0 && Kcomp_ft.negpks < -45 && Kcomp_ft.pospks-Kcomp_ft.negpks > 100 &&...
+                    Kcomp_ft.pospks > 0.5*abs(Kcomp_ft.negpks)) %~isempty(Kcomp.start_stop)
+                kcomp_ft(s,z) = 1;
+            else
+                kcomp_ft(s,z) = 0;
+
+            end
+    end
          
 end
 
@@ -285,10 +324,10 @@ nonspind_comb(nonspind_def) = 1;
 feat_groups{1,m} = [misc_alert.varian.freqband2' misc_alert.varian.freqband5' misc_alert.varian.freqband6'...
                     misc_alert.varian.freqband10'...
                     coh_features];
-               
+
 save([S.feat_filepath S.feat_filename],'feat_groups','misc_alert','coh_features','grapho_comb','spind_comb','nonspind_comb');
 
-    
+
 else
     load([S.feat_filepath S.feat_filename]);
 end
@@ -297,7 +336,7 @@ end
 end
 
 %% Arrange the features and labels..
-               
+
 feat_groups{1,m} = [misc_alert.varian.freqband2' misc_alert.varian.freqband5' misc_alert.varian.freqband6'...
                     misc_alert.varian.freqband10'...
                     coh_features];
@@ -307,19 +346,19 @@ class_feats = [indexes feat_groups{1,1}];
  rm_trls = union(nc_trls,na_trls);
  rm_trls = union(rm_trls,rm_subjs);
  %rm_trls = union(rm_trls,nb_trls);
- 
+
  class_feats(rm_trls,:) = [];
  grapho_feats = [graphoindexes grapho_comb];
  grapho_feats(rm_trls,:) = [];
- 
+
  spind_feats = [graphoindexes spind_comb];
  spind_feats(~spind_comb,1) = nan;
  spind_feats(rm_trls,:) = [];
- 
+
  nonspind_feats = [graphoindexes nonspind_comb];
  nonspind_feats(~nonspind_comb,1) = nan;
  nonspind_feats(rm_trls,:) = [];
- 
+
 
 DataClass = class_feats(:,1);
 DataSet = class_feats(:,2:end);
@@ -339,7 +378,7 @@ c = cvpartition(DataClass,'KFold',nfold_cv);
 trainIdx =[];testIdx =[];
 
 model_collecAlert = [];model_collecGrapho = [];
-ranges_collAlert =[]; ranges_collGrapho =[]; 
+ranges_collAlert =[]; ranges_collGrapho =[];
 minimums_collAlert =[];minimums_collGrapho =[];
 
 statstrain_collec=[];
@@ -401,7 +440,7 @@ Ncv_param = 3; % Ncv-fold cross validation cross validation
 
 cmd = [optionCV.svmCmd,' -b 1 -c ',num2str(bestc),' -g ',num2str(bestg)];
 % % % % Train the SVM
-% % % 
+% % %
 bestModel = svmtrain(trainLabel, trainData, cmd);
 
 
@@ -498,7 +537,7 @@ Ncv_param = 3; % Ncv-fold cross validation cross validation
 
 cmd = [optionCV.svmCmd,' -b 1 -c ',num2str(bestc),' -g ',num2str(bestg)];
 % % % % Train the SVM
-% % % 
+% % %
 bestModelGrapho = svmtrain(trainLabelgrapho, traindatagrapho, cmd);
 
 % N-cross validation
@@ -549,31 +588,31 @@ fprintf('\n\n');
 
 % % Use the SVM model to classify the data
   [predictedLabel, accuracy, decisValueWinner] = svmpredict(testLabel, testData, bestModel, '-b 1'); % run the SVM model on the test data
-  
+
   grapho_pred = intersect(find(predictedLabel==2),find(GraphotestDataset==1));
   nonspind_pred = intersect(find(predictedLabel==2),find(nonSpindtestDataset==1));
- 
+
   grapho_nonspindpred = intersect(nonspind_pred,grapho_pred);
   subtestdatagrapho = GraphotestData(grapho_pred,:);
   subtestLabelgrapho = GraphotestLabel(grapho_pred);
-  
+
   subtestLabelnonspindgrapho = ismember(grapho_pred,grapho_nonspindpred);
-  
-  
+
+
   subtestdatagrapho = (subtestdatagrapho - repmat(minimumsgrapho, size(subtestdatagrapho, 1), 1)) ./ repmat(rangesgrapho, size(subtestdatagrapho, 1), 1);
 
-  
+
   [subpredictedLabelgrapho, accuracy, decisValueWinner] = svmpredict(subtestLabelgrapho, subtestdatagrapho, bestModelGrapho, '-b 1');
   %Set the nonspindle element to also grapho..
   subpredictedLabelgrapho(subtestLabelnonspindgrapho) = 3;
-  
+
   predactualgrapho = find(subpredictedLabelgrapho ==3);
   predictedLabel(grapho_pred(predactualgrapho)) = 3;
-  
+
   grapho_actual= intersect(find(testLabel==2),find(GraphotestLabel==3));
-  
+
   testLabel(grapho_actual) = 3;
-  
+
   [confusionMatrixtest,ordertest] = confusionmat(testLabel,predictedLabel);
   stats_test = confusionmatStats(testLabel,predictedLabel);
  accuracytest = trace(confusionMatrixtest)/sum(confusionMatrixtest(:));
@@ -597,11 +636,11 @@ fprintf('\n\n');
 
 
 model_collecAlert = [model_collecAlert bestModel];
-ranges_collAlert =[ranges_collAlert; ranges]; 
+ranges_collAlert =[ranges_collAlert; ranges];
 minimums_collAlert =[minimums_collAlert; minimums];
 
 model_collecGrapho = [model_collecGrapho bestModelGrapho];
-ranges_collGrapho =[ranges_collGrapho; rangesgrapho]; 
+ranges_collGrapho =[ranges_collGrapho; rangesgrapho];
 minimums_collGrapho =[minimums_collGrapho; minimumsgrapho];
 
 
@@ -612,33 +651,33 @@ end
 
 
 S.model_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/Scripts/classify_libsvm/'];
-S.model_filename = ['model_collec64_' char(rmsubject_ids(k)) ];
+S.model_filename = ['model_collec_' char(rmsubject_ids(k)) ];
 
 save([S.model_filepath S.model_filename],'model_collecAlert','ranges_collAlert','minimums_collAlert',...
                                          'model_collecGrapho','ranges_collGrapho','minimums_collGrapho',...
                                          'statstrain_collec','statstest_collec');
-                                     
-                                     
+
+
 S.validation_filepath = [ pathappend 'SpatialAttention_Drowsiness/SleepOnset_Classification/validation/'];
-S.validation_filename = ['internal_train_64.mat'];
+S.validation_filename = ['internal_train_' char(rmsubject_ids(k)) '.mat'];
 sensitivity_alert =[];specificity_alert =[];f1_score_alert =[];
 sensitivity_ripples =[];specificity_ripples =[];f1_score_ripples =[];
 sensitivity_grapho =[];specificity_grapho =[];f1_score_grapho =[];
 
 for idx = 1:length(statstrain_collec)
-   
+
     sensitivity_alert(idx) = 100*statstrain_collec(idx).sensitivity(1);
     sensitivity_ripples(idx) = 100*statstrain_collec(idx).sensitivity(2);
     sensitivity_grapho(idx) = 100*statstrain_collec(idx).sensitivity(3);
-    
+
     specificity_alert(idx) = 100*statstrain_collec(idx).specificity(1);
     specificity_ripples(idx) =100*statstrain_collec(idx).specificity(2);
     specificity_grapho(idx) = 100*statstrain_collec(idx).specificity(3);
-    
+
     f1_score_alert(idx) = statstrain_collec(idx).Fscore(1);
     f1_score_ripples(idx) = statstrain_collec(idx).Fscore(2);
     f1_score_grapho(idx) = statstrain_collec(idx).Fscore(3);
-  
+
 end
 
 
@@ -647,7 +686,7 @@ save([S.validation_filepath S.validation_filename],'sensitivity_alert','sensitiv
                                                     'specificity_alert','specificity_ripples','specificity_grapho',...
                                                     'f1_score_alert','f1_score_ripples','f1_score_grapho');
 
-S.validation_filename = ['internal_test_64.mat'];
+S.validation_filename = ['internal_test_' char(rmsubject_ids(k)) '.mat'];
 
 
 sensitivity_alert =[];specificity_alert =[];f1_score_alert =[];
@@ -655,19 +694,19 @@ sensitivity_ripples =[];specificity_ripples =[];f1_score_ripples =[];
 sensitivity_grapho =[];specificity_grapho =[];f1_score_grapho =[];
 
 for idx = 1:length(statstest_collec)
-   
+
     sensitivity_alert(idx) = 100*statstest_collec(idx).sensitivity(1);
     sensitivity_ripples(idx) = 100*statstest_collec(idx).sensitivity(2);
     sensitivity_grapho(idx) = 100*statstest_collec(idx).sensitivity(3);
-    
+
     specificity_alert(idx) = 100*statstest_collec(idx).specificity(1);
     specificity_ripples(idx) = 100*statstest_collec(idx).specificity(2);
     specificity_grapho(idx) = 100*statstest_collec(idx).specificity(3);
-    
+
     f1_score_alert(idx) = statstest_collec(idx).Fscore(1);
     f1_score_ripples(idx) = statstest_collec(idx).Fscore(2);
     f1_score_grapho(idx) = statstest_collec(idx).Fscore(3);
-  
+
 end
 
 

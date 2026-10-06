@@ -2,7 +2,7 @@ The project is mainly about micro measures of Alertness levels in Humans using E
 
 ## Requirements:
 ### Software:
-* Matlab (tested with R2016b)
+* Matlab (tested with R2020b)
 * EEGlab (tested with eeglab13_5_4b)
 * fieldtrip (tested with fieldtrip-20151223)
 ### Data:
@@ -27,6 +27,11 @@ Frontal:'E33', 'E122', 'E11'
 ```
 Occiptal: 'E126','E116','E150', Central: 'E59', 'E183', Parietal:'E161', Temporal:'E69','E202','E179','E219','E190',        
 Frontal:'E47', 'E2', 'E21'
+```
+* If you have a system where you have the montage for sleep scoring then following electrode labels (still to be done): 
+```
+Occiptal: 'Oz','O1','O2', Central: 'C3', 'C4', Parietal: 'PO10', Temporal: 'T7','T8','TP8','FT10','TP10', 
+Frontal:'F7', 'F8', 'Fz'      
 ```
 
 Then proceed directly to 1. below, if not then look at the section **Electrode Labelling**

@@ -11,12 +11,26 @@ function [trialstruc] = classify_microMeasures(eegStruct, modelfilepath,channelc
 % Produces a classification of trials as alert, drowsymild or drowsysevere..
 %
 % Requirements: EEGlab (tested with eeglab13_5_4b), fieldtrip (tested with
-% fieldtrip-20151223), Matlab (tested with R2016b)
+% fieldtrip-20151223), Matlab (tested with R2020b)
 %_____________________________________________________________________________
-% Author: Sridhar Jagannathan (03/03/2018).
+% Author: Sridhar Jagannathan (29/11/2021).
 %
-% Copyright (C) 2017 Sridhar Jagannathan
-
+% Copyright (C) 2021 Sridhar Jagannathan
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+%%
 trialstruc = [];
 EEG = eegStruct;
 
@@ -42,7 +56,14 @@ elseif strcmp('256',channelconfig)
                      'E161',...
                      'E69','E202','E179','E219','E190',...
                      'E47', 'E2', 'E21'};
-    
+                 
+elseif strcmp('sleep',channelconfig)
+    chan_elecs = {'O1','O2',... %'Oz',
+                     'C3', 'C4', ...
+                     'P4', ... %'PO10',
+                     'P3','Pz',... %'T7','T8','TP8','FT10','TP10',
+                     'F3', 'F4', 'Fz' %'F7', 'F8',
+                     };                 
 else
     error('Invalid channel configuration') 
 end
@@ -71,6 +92,9 @@ if sum(match_chan) == length(chan_elecs)
     elseif strcmp('256',channelconfig)
         config_chan = '256_chan'; 
         fprintf('\n--Using 256 channel configuration--\n');
+    elseif strcmp('sleep',channelconfig)
+        config_chan = 'sleep_chan'; 
+        fprintf('\n--Using sleep channel configuration--\n');
     end
 else
     warning('Trying to run a sub-optimal configuration')
@@ -102,6 +126,15 @@ elseif strcmp('64_chan',config_chan)
                      'PO10',...
                      'T7','T8','TP8','FT10','TP10',...
                      'F7', 'F8', 'Fz'};
+                 
+elseif strcmp('sleep_chan',config_chan)
+    
+     electrodes_rx = {'O1','O2',... %'Oz',
+                     'C3', 'C4', ...
+                     'P4', ... %'PO10',
+                     'P3','Pz',... %'T7','T8','TP8','FT10','TP10',
+                     'F3', 'F4', 'Fz' %'F7', 'F8',
+                     }; 
     
 end
             
@@ -141,6 +174,14 @@ elseif strcmp('64_chan',config_chan)
     electrodes_frontal = {'F7', 'F8', 'Fz'};
     electrodes_central = {'C3', 'C4'};
     electrodes_parietal = {'PO10'};
+    
+elseif strcmp('sleep_chan',config_chan)
+    
+    electrodes_occ = {'O1','O2'}; %'Oz'
+    electrodes_tempero = {'P3','Pz'}; %'T8','TP8','FT10','TP10'
+    electrodes_frontal = {'F3', 'F4', 'Fz'}; %'F7', 'F8'
+    electrodes_central = {'C3', 'C4'};
+    electrodes_parietal = {'P4'}; %'PO10'
     
 end
 
@@ -200,6 +241,14 @@ elseif strcmp('64_chan',config_chan)
     %eleclabels.parietal = {'Pz'};
     eleclabels.temporal =  {'T7', 'T8'};
     eleclabels.occipetal = {'Oz','O1', 'O2'};
+    
+elseif strcmp('sleep_chan',config_chan)
+    
+    eleclabels.frontal = {'F3', 'F4', 'Fz'};
+    eleclabels.central = {'C3', 'C4'};
+    %eleclabels.parietal = {'Pz'};
+    eleclabels.temporal =  {'P3','Pz'};
+    eleclabels.occipetal = {'O1','O2'};
     
 end
 
@@ -304,15 +353,17 @@ kcomp_ft =[]; Data = double(squeeze(EEG.data));
 
 for z = 1:EEG.trials
     
-    [Kcomp, Kcomp_ft] = classify_computeKcomplexfts(Data(s,:,z), EEG.srate);
-    
-        if (Kcomp_ft.count>0 && Kcomp_ft.negpks < -45 && Kcomp_ft.pospks-Kcomp_ft.negpks > 100 &&...
-                Kcomp_ft.pospks > 0.5*abs(Kcomp_ft.negpks)) %~isempty(Kcomp.start_stop)
-            kcomp_ft(s,z) = 1;
-        else
-            kcomp_ft(s,z) = 0;
+    for s = 1:size(Data,1)
+        [Kcomp, Kcomp_ft] = classify_computeKcomplexfts(Data(s,:,z), EEG.srate);
 
-        end
+            if (Kcomp_ft.count>0 && Kcomp_ft.negpks < -45 && Kcomp_ft.pospks-Kcomp_ft.negpks > 100 &&...
+                    Kcomp_ft.pospks > 0.5*abs(Kcomp_ft.negpks)) %~isempty(Kcomp.start_stop)
+                kcomp_ft(s,z) = 1;
+            else
+                kcomp_ft(s,z) = 0;
+
+            end
+    end
          
 end
 
